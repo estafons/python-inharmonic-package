@@ -1,0 +1,4 @@
+setup.cfg
+setup.py
+/dist/*
+*.egg/*

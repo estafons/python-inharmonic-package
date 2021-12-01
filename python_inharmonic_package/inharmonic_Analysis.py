@@ -11,12 +11,7 @@ from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import (LinearRegression, TheilSenRegressor, RANSACRegressor, HuberRegressor)
 import matplotlib.patches as mpatches
 from constants_parser import Constants
-
 import matplotlib.pyplot as plt
-
-# from ransac import RansacModel
-# from linearleastsquare import LinearLeastSqaureModel
-
 
 class Partial():
     def __init__(self, frequency, order, peak_idx):
@@ -180,16 +175,6 @@ def compute_partials(note_instance, partial_func_args):
         peak_freqs = [partial.frequency for partial in note_instance.partials]
         peaks_idx = [partial.peak_idx for partial in note_instance.partials]
 
-    # if constants.plot: 
-    #     fig = plt.figure(figsize=(15, 10))
-    #     note_instance.plot_partial_deviations(lim=lim, res=note_instance.abc, fig=fig)#, peaks_idx=Peaks_Idx)
-    #     note_instance.plot_DFT(Peaks, Peaks_Idx, lim, fig=fig)   
-    #     # fig.savefig()
-    #     plt.show()
-    #     plt.clf()
-    
-    # del Peaks, Peaks_Idx
-
 
 def compute_differences(note_instance):
     differences = []
@@ -263,110 +248,3 @@ def zero_out(fft, center_freq, window_length, constants : Constants):
         x[i] = temp[i]**2
 
     return x
-
-
-"""here on tests"""
-
-#-----------ToolBox Example--------------------
-
-#when changing only partial computing function
-def example_compute_partial(note_instance, partial_func_args):
-    arg0 = partial_func_args[0]
-    arg1 = partial_func_args[1]
-    arg2 = partial_func_args[2]
-    for i in range(0, arg0):
-        x = random.choice([arg1, arg2])
-        note_instance.partials.append(Partial(x, i))
-# example changing beta computation and probably bypassing previous partial computation
-def example_inharmonicity_computation(note_instance, inharmonic_func_args):
-    arg0 = inharmonic_func_args[0]
-    arg1 = inharmonic_func_args[1]
-    # do more stuff...
-    note_instance.beta = arg0
-
-#-----------end of ToolBox Example---------------
-
-def wrapper_func(fundamental, audio, sampling_rate, constants : Constants):
-    
-    ToolBoxObj = ToolBox(compute_partials, compute_inharmonicity, [14, fundamental/2, constants], [])
-    note_instance = NoteInstance(fundamental, 0, audio, ToolBoxObj, sampling_rate, constants)
-    print(note_instance.beta, [x.frequency for x in note_instance.partials])
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-def compute_partials_old(note_instance, partial_func_args):
-    """compute up to no_of_partials partials for note instance. 
-    Freq_deviate is the length of window arround k*f0 that the partials are tracked with highest peak."""
-    no_of_partials = partial_func_args[0]
-    freq_diviate = partial_func_args[1]
-    constants = partial_func_args[2]
-    diviate = round(freq_diviate/(note_instance.sampling_rate/note_instance.fft.size))
-
-    for i in range(2,no_of_partials):
-        filtered = zero_out(note_instance.fft, center_freq=i*note_instance.fundamental, window_length=diviate, constants=constants)
-        peaks, _  =scipy.signal.find_peaks(np.abs(filtered),distance=100000) # better way to write this?
-        # print(peaks)
-        max_peak = note_instance.frequencies[peaks[0]]
-        note_instance.partials.append(Partial(max_peak, i))
-
-
-def compute_partials_with_order(note_instance, partial_func_args):
-    freq_diviate = partial_func_args[0]
-    constants = partial_func_args[1]
-    StrBetaObj = partial_func_args[2]
-    b = []
-    midi_note = round(librosa.hz_to_midi(note_instance.fundamental))
-    t =  len(StrBetaObj.beta_lim[midi_note - 40])
-    for n in range(0, t):
-        note_instance.partials = []
-        StrBetaObj.beta_lim[midi_note - 40].sort(reverse = True)
-        k_max = StrBetaObj.beta_lim[midi_note - 40][n]
-        #if k_max > constants.k_max:
-        #    k_max = constants.k_max
-        compute_partials(note_instance, [k_max, freq_diviate, constants])
-        compute_inharmonicity(note_instance, [])
-        #print(k_max, note_instance.beta) #uncoment if you want to check variation of betas in relation with k_max. Indicates why bellow code was added
-
-        # NOTE: check for new threshold
-        if note_instance.beta > 10**(-7):
-            b.append(note_instance.beta)
-    # print()
-    # print(b, StrBetaObj.beta_lim[midi_note - 40])        
-    if std(b)/np.mean(b) < 0.5: #coefficient of variation. If small then low variance of betas so get median, else mark as inconclusive
-        note_instance.beta = median(b)
-    else:
-        note_instance.beta = 10**(-10)
-        #    continue
-        #else:
-        #    return
-    return
-
-def compute_partials_with_order_strict(note_instance, partial_func_args):
-    freq_diviate = partial_func_args[0]
-    constants = partial_func_args[1]
-    StrBetaObj = partial_func_args[2]
-    midi_note = round(librosa.hz_to_midi(note_instance.fundamental))
-    t =  len(StrBetaObj.beta_lim[midi_note - 40])
-    for n in range(0, t):
-        note_instance.partials = []
-        k = min(StrBetaObj.beta_lim[midi_note - 40])
-        
-        compute_partials(note_instance, [k, freq_diviate, constants])
-        compute_inharmonicity(note_instance, [])
-        if note_instance.beta < 10**(-7):
-            continue
-        else:
-            return
-    return

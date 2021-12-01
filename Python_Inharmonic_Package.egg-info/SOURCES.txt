@@ -4,14 +4,8 @@ Python_Inharmonic_Package/Inharmonic_Detector.py
 Python_Inharmonic_Package/__init__.py
 Python_Inharmonic_Package/betafuncs.py
 Python_Inharmonic_Package/constants_parser.py
-Python_Inharmonic_Package/example_sklearn.py
-Python_Inharmonic_Package/genetic.py
-Python_Inharmonic_Package/genetic_tools.py
 Python_Inharmonic_Package/helper.py
 Python_Inharmonic_Package/inharmonic_Analysis.py
-Python_Inharmonic_Package/linearleastsquare.py
-Python_Inharmonic_Package/ransac.py
-Python_Inharmonic_Package/track_class.py
 Python_Inharmonic_Package.egg-info/PKG-INFO
 Python_Inharmonic_Package.egg-info/SOURCES.txt
 Python_Inharmonic_Package.egg-info/dependency_links.txt
