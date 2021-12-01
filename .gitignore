@@ -1,4 +1,6 @@
+.gitignore
 setup.cfg
 setup.py
 /dist/*
 *.egg/*
+*.py
